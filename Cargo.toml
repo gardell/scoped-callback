@@ -1,0 +1,7 @@
+[package]
+name = "scoped-callback"
+version = "0.1.0"
+authors = ["Johan Gardell <johan.gardell@distilnetworks.com>"]
+edition = "2018"
+
+[dependencies]
