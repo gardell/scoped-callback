@@ -1,3 +1,6 @@
+//! Allows registering scoped functions with local borrows with code that expect
+//! functions taking `'static` lifetimes.
+
 unsafe fn transmute_lifetime<'a, A: 'static, R: 'static>(
     value: Box<dyn FnMut(A) -> R + 'a>,
 ) -> Box<dyn FnMut(A) -> R + 'static> {
@@ -24,6 +27,8 @@ impl Drop for Deregister {
     }
 }
 
+/// A handle to the `register`. When the handle is dropped, the callback is deregistered.
+/// See `Scope::register`.
 pub struct Registered<'a> {
     deregister: std::rc::Rc<Deregister>,
     marker: std::marker::PhantomData<&'a ()>,
@@ -35,11 +40,21 @@ impl<'a> Drop for Registered<'a> {
     }
 }
 
+/// A `Scope` can be used to register callbacks. See `Scope::register`.
 pub struct Scope {
     callbacks: std::cell::RefCell<Vec<std::rc::Rc<Deregister>>>,
 }
 
 impl Scope {
+    /// Register the function `c` with local lifetime `'a` using the `register` and `deregister`
+    /// functions handling `'static` lifetime functions.
+    /// The returned `Registered` object will, when dropped, call the `deregister` function.
+    ///
+    /// If the `Registered` object is `std::mem::forget`-ed, the `Scope::drop` will
+    /// perform the deregistration.
+    ///
+    /// If the callback passed to the `register` function is invoked after `deregister`
+    /// has been invoked, the callback will `panic!`.
     pub fn register<'a, A: 'static, R: 'static, H: 'static>(
         &'a self,
         c: impl (FnMut(A) -> R) + 'a,
@@ -78,6 +93,9 @@ impl Drop for Scope {
     }
 }
 
+/// Call `scope` to receive a `Scope` instance that can be used to register
+/// functions taking local references on a callback registering function that takes
+/// functions with `'static` lifetimes.
 pub fn scope<R>(f: impl FnOnce(&Scope) -> R) -> R {
     f(&Scope {
         callbacks: std::cell::RefCell::new(Vec::new()),
