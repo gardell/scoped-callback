@@ -48,6 +48,13 @@ pub struct Scope<'env> {
 }
 
 impl<'env> Scope<'env> {
+    fn new() -> Self {
+        Self {
+            callbacks: std::cell::RefCell::new(Vec::new()),
+            marker: std::marker::PhantomData,
+        }
+    }
+
     /// Register the function `c` with local lifetime `'env` using the `register` and `deregister`
     /// functions that handle only `'static` lifetime functions.
     /// The returned `Registered` object will, when dropped, invoke the `deregister` function.
@@ -98,10 +105,27 @@ impl<'env> Drop for Scope<'env> {
 /// Call `scope` to receive a `Scope` instance that can be used to register functions.
 /// See [Scope::register](struct.Scope.html#method.register).
 pub fn scope<'env, R>(f: impl FnOnce(&Scope<'env>) -> R) -> R {
-    f(&Scope::<'env> {
-        callbacks: std::cell::RefCell::new(Vec::new()),
-        marker: std::marker::PhantomData,
-    })
+    f(&Scope::<'env>::new())
+}
+
+/// Same as [scope](fn.scope.html) but also allow `async` borrows.
+///
+/// The `Scope` instance passed to `f` can not outlive the call of this function.
+/// However, for async functions, this would be useless as the function returns a `Future`
+/// that is yet to complete, and may contain references to the given `Scope`.
+/// In order to remedy this, `scope_async` explicitly makes sure `Scope` lives throughout
+/// the lifetime of the future returned by `f`.
+pub async fn scope_async<'env, R>(
+    f: impl for<'r> FnOnce(&'r Scope<'env>) -> futures_util::future::BoxFuture<'r, R>
+) -> R {
+    f(&Scope::<'env>::new()).await
+}
+
+/// Same as [scope_async](fn.scope_async.html) but here `f` returns a `LocalBoxFuture` instead.
+pub async fn scope_async_local<'env, R>(
+    f: impl for<'r> FnOnce(&'r Scope<'env>) -> futures_util::future::LocalBoxFuture<'r, R>
+) -> R {
+    f(&Scope::<'env>::new()).await
 }
 
 #[cfg(test)]
