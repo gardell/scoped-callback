@@ -60,7 +60,7 @@ impl<'env> Scope<'env> {
     pub fn register<'scope, A: 'static, R: 'static, H: 'static>(
         &'scope self,
         c: impl (FnMut(A) -> R) + 'env,
-        register: impl FnOnce(Box<dyn FnMut(A) -> R>) -> H,
+        register: impl FnOnce(Box<dyn FnMut(A) -> R>) -> H + 'env,
         deregister: impl FnOnce(H) + 'env,
     ) -> Registered<'env, 'scope> {
         let c = unsafe { transmute_lifetime(Box::new(c)) };
