@@ -7,10 +7,10 @@ unsafe fn transmute_lifetime<'a, A: 'static, R: 'static>(
     std::mem::transmute(value)
 }
 
-struct Deregister(std::cell::RefCell<Option<Box<dyn FnOnce()>>>);
+struct Deregister<'a>(std::cell::RefCell<Option<Box<dyn FnOnce() + 'a>>>);
 
-impl Deregister {
-    fn new(f: Box<dyn FnOnce()>) -> Self {
+impl<'a> Deregister<'a> {
+    fn new(f: Box<dyn FnOnce() + 'a>) -> Self {
         Self(std::cell::RefCell::new(Some(f)))
     }
 
@@ -21,7 +21,7 @@ impl Deregister {
     }
 }
 
-impl Drop for Deregister {
+impl<'a> Drop for Deregister<'a> {
     fn drop(&mut self) {
         self.force();
     }
@@ -29,12 +29,12 @@ impl Drop for Deregister {
 
 /// A handle returned by [Scope::register](struct.Scope.html#method.register).
 /// When this handle is dropped, the callback is de-registered.
-pub struct Registered<'scope> {
-    deregister: std::rc::Rc<Deregister>,
+pub struct Registered<'env, 'scope> {
+    deregister: std::rc::Rc<Deregister<'env>>,
     marker: std::marker::PhantomData<&'scope ()>,
 }
 
-impl<'a> Drop for Registered<'a> {
+impl<'env, 'scope> Drop for Registered<'env, 'scope> {
     fn drop(&mut self) {
         self.deregister.force()
     }
@@ -43,7 +43,7 @@ impl<'a> Drop for Registered<'a> {
 /// A `Scope` is used to register callbacks.
 /// See [Scope::register](struct.Scope.html#method.register).
 pub struct Scope<'env> {
-    callbacks: std::cell::RefCell<Vec<std::rc::Rc<Deregister>>>,
+    callbacks: std::cell::RefCell<Vec<std::rc::Rc<Deregister<'env>>>>,
     marker: std::marker::PhantomData<&'env mut &'env ()>,
 }
 
@@ -61,8 +61,8 @@ impl<'env> Scope<'env> {
         &'scope self,
         c: impl (FnMut(A) -> R) + 'env,
         register: impl FnOnce(Box<dyn FnMut(A) -> R>) -> H,
-        deregister: impl FnOnce(H) + 'static,
-    ) -> Registered<'scope> {
+        deregister: impl FnOnce(H) + 'env,
+    ) -> Registered<'env, 'scope> {
         let c = unsafe { transmute_lifetime(Box::new(c)) };
         let c = std::rc::Rc::new(std::cell::RefCell::new(Some(c)));
         let handle = {
@@ -122,7 +122,10 @@ mod tests {
                 |_| {
                     let b = a * a;
                     println!("{}", b);
-                }, register, deregister);
+                },
+                register,
+                deregister,
+            );
 
             std::mem::drop(registered);
         });
