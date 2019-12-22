@@ -241,4 +241,28 @@ mod tests {
         });
         assert!(res.is_err());
     }
+
+    #[test]
+    fn panic_in_scoped_is_safe() {
+        let stored = std::sync::Mutex::new(None);
+        let res = std::panic::catch_unwind(|| {
+            scope(|scope| {
+                let registered = scope.register(
+                    |_| {},
+                    |callback| {
+                        stored.lock().unwrap().replace(callback);
+                    },
+                    |_| {},
+                );
+
+                std::mem::forget(registered);
+                panic!()
+            });
+        });
+        assert!(res.is_err());
+        let res = std::panic::catch_unwind(|| {
+            (stored.lock().unwrap().as_mut().take().unwrap())(42);
+        });
+        assert!(res.is_err());
+    }
 }
