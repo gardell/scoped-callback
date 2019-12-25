@@ -33,7 +33,7 @@ cargo_publish () {
     test -z "$(git diff origin/master)" || (echo "Not up to date with origin/master"; exit 3)
     test -z "$(./generate_readme.sh | diff - README.md)" || (echo "README.md not up to date"; exit 4)
 
-    cargo test
+    ./test.sh
 
     cargo fmt -- --check
 
