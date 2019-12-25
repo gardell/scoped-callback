@@ -1,3 +1,5 @@
+![](https://github.com/gardell/scoped-callback/workflows/CI/badge.svg)
+[![Docs](https://docs.rs/scoped-callback/badge.svg)](https://docs.rs/scoped-callback/latest/scoped_callback)
 # scoped-callback
 
 Allows registering scoped functions with local borrows with code that expect
