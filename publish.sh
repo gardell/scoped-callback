@@ -32,7 +32,7 @@ cargo_publish () {
     test -z "$(git status --porcelain)" || (echo "Dirty repo"; exit 2)
     test -z "$(git diff origin/master)" || (echo "Not up to date with origin/master"; exit 3)
 
-    ./test.sh
+    cargo test
 
     cargo fmt -- --check
 
