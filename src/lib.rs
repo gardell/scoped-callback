@@ -42,8 +42,8 @@
 //!   instance, which when [Drop](struct.Registered.html#impl-Drop)-ed causes the callback to be
 //!   de-registered using the provided function.
 //! * In case the [Registered](struct.Registered.html) instance is not
-//!   [Drop](struct.Registered.html#impl-Drop)-ed, for example by calling
-//!   [std::mem::forget](https://doc.rust-lang.org/std/mem/fn.forget.html) (which is *not* `unsafe`!)
+//!   [Drop](struct.Registered.html#impl-Drop)-ed, for example by calling `std::mem::forget`
+//!   (which is *not* `unsafe`!)
 //!   the de-registering using the provided function will instead happen after leaving the closure
 //!   passed to [scope](fn.scope.html).
 //! * In case the given de-register function doesn't actually de-register the callback,
