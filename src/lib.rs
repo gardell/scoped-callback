@@ -166,14 +166,14 @@ pub fn scope<'env, R>(f: impl FnOnce(&Scope<'env>) -> R) -> R {
 /// In order to remedy this, `scope_async` explicitly makes sure `Scope` lives throughout
 /// the lifetime of the future returned by `f`.
 pub async fn scope_async<'env, R>(
-    f: impl for<'r> FnOnce(&'r Scope<'env>) -> futures_util::future::BoxFuture<'r, R>
+    f: impl for<'r> FnOnce(&'r Scope<'env>) -> futures_util::future::BoxFuture<'r, R>,
 ) -> R {
     f(&Scope::<'env>::new()).await
 }
 
 /// Same as [scope_async](fn.scope_async.html) but here `f` returns a `LocalBoxFuture` instead.
 pub async fn scope_async_local<'env, R>(
-    f: impl for<'r> FnOnce(&'r Scope<'env>) -> futures_util::future::LocalBoxFuture<'r, R>
+    f: impl for<'r> FnOnce(&'r Scope<'env>) -> futures_util::future::LocalBoxFuture<'r, R>,
 ) -> R {
     f(&Scope::<'env>::new()).await
 }
