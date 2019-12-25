@@ -51,3 +51,5 @@ There are three important concepts in this implementation:
   and for some reason the callback given to the [register](struct.Scope.html#method.register)
   function is called after the closure passed to [scope](fn.scope.html), the call will cause a
   `panic!`.
+
+License: Apache-2.0
