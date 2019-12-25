@@ -31,6 +31,7 @@ cargo_publish () {
     git fetch
     test -z "$(git status --porcelain)" || (echo "Dirty repo"; exit 2)
     test -z "$(git diff origin/master)" || (echo "Not up to date with origin/master"; exit 3)
+    test -z "$(./generate_readme.sh | diff - README.md)" || (echo "README.md not up to date"; exit 4)
 
     cargo test
 
@@ -38,7 +39,7 @@ cargo_publish () {
 
     git fetch --tags
     git tag -l | sed '/^'"${VERSION}"'$/{q2}' > /dev/null \
-        || (echo "${VERSION} already exists"; exit 4)
+        || (echo "${VERSION} already exists"; exit 5)
 
     find . \
         -iname Cargo.toml \
