@@ -19,7 +19,7 @@ cargo_publish () {
                 ;;
             *)
                 echo "Aborted"
-                exit 5
+                exit 6
                 ;;
         esac
     )

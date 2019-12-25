@@ -34,22 +34,22 @@ scope(|scope| {
   );
 });
 ```
-See [scope_async](https://docs.rs/scoped-callback/fn.scope_async.html) and [scope_async_local](fn.scope_async_local.html)
+See [scope_async](https://docs.rs/scoped-callback/latest/fn.scope_async.html) and [scope_async_local](fn.scope_async_local.html)
 as well for versions that work with `async` scopes.
 
 ## How is this safe?
 There are three important concepts in this implementation:
-* [register](https://docs.rs/scoped-callback/struct.Scope.html#method.register) returns a [Registered](struct.Registered.html)
-  instance, which when [Drop](https://docs.rs/scoped-callback/struct.Registered.html#impl-Drop)-ed causes the callback to be
+* [register](https://docs.rs/scoped-callback/latest/struct.Scope.html#method.register) returns a [Registered](struct.Registered.html)
+  instance, which when [Drop](https://docs.rs/scoped-callback/latest/struct.Registered.html#impl-Drop)-ed causes the callback to be
   de-registered using the provided function.
-* In case the [Registered](https://docs.rs/scoped-callback/struct.Registered.html) instance is not
-  [Drop](https://docs.rs/scoped-callback/struct.Registered.html#impl-Drop)-ed, for example by calling
-  [std::mem::forget](https://docs.rs/scoped-callback/https://doc.rust-lang.org/std/mem/fn.forget.html) (which is *not* `unsafe`!)
+* In case the [Registered](https://docs.rs/scoped-callback/latest/struct.Registered.html) instance is not
+  [Drop](https://docs.rs/scoped-callback/latest/struct.Registered.html#impl-Drop)-ed, for example by calling
+  [std::mem::forget](https://docs.rs/scoped-callback/latest/https://doc.rust-lang.org/std/mem/fn.forget.html) (which is *not* `unsafe`!)
   the de-registering using the provided function will instead happen after leaving the closure
-  passed to [scope](https://docs.rs/scoped-callback/fn.scope.html).
+  passed to [scope](https://docs.rs/scoped-callback/latest/fn.scope.html).
 * In case the given de-register function doesn't actually de-register the callback,
-  and for some reason the callback given to the [register](https://docs.rs/scoped-callback/struct.Scope.html#method.register)
-  function is called after the closure passed to [scope](https://docs.rs/scoped-callback/fn.scope.html), the call will cause a
+  and for some reason the callback given to the [register](https://docs.rs/scoped-callback/latest/struct.Scope.html#method.register)
+  function is called after the closure passed to [scope](https://docs.rs/scoped-callback/latest/fn.scope.html), the call will cause a
   `panic!`.
 
 License: Apache-2.0
