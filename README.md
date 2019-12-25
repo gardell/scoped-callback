@@ -54,4 +54,7 @@ There are three important concepts in this implementation:
   function is called after the closure passed to [scope](https://docs.rs/scoped-callback/latest/fn.scope.html), the call will cause a
   `panic!`.
 
+## `no_std`
+This crate supports `no_std` by disabling its `std` feature.
+
 License: Apache-2.0

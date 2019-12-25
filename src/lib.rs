@@ -50,6 +50,9 @@
 //!   and for some reason the callback given to the [register](struct.Scope.html#method.register)
 //!   function is called after the closure passed to [scope](fn.scope.html), the call will cause a
 //!   `panic!`.
+//!
+//! # `no_std`
+//! This crate supports `no_std` by disabling its `std` feature.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
