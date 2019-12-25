@@ -42,6 +42,27 @@ jobs:
         with:
           command: test
 
+  test-no_std:
+    name: no_std Test Suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v1
+
+      - name: Install nightly toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+
+      - name: Ensure that crate is no_std
+        uses: actions-rs/cargo@v1
+        with:
+          command: rustc
+          args: --manifest-path=ensure_no_std/Cargo.toml -- -C link-arg=-nostartfiles
+          toolchain: nightly
+
   lints:
     name: Lints
     runs-on: ubuntu-latest
