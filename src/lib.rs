@@ -70,6 +70,13 @@ unsafe fn transmute_lifetime<'a, A: 'static, R: 'static>(
     core::mem::transmute(value)
 }
 
+#[cfg(feature = "async")]
+unsafe fn transmute_future_lifetime<'a, T: 'static>(
+    future: futures_util::future::LocalBoxFuture<'a, T>,
+) -> futures_util::future::LocalBoxFuture<'static, T> {
+    core::mem::transmute(future)
+}
+
 struct Deregister<'a>(core::cell::RefCell<Option<Box<dyn FnOnce() + 'a>>>);
 
 impl<'a> Deregister<'a> {
@@ -153,6 +160,45 @@ impl<'env> Scope<'env> {
             deregister,
             marker: core::marker::PhantomData,
         }
+    }
+
+    /// Wrap a scoped `Future` into one with a `'static` lifetime.
+    /// As the scope leaves, if the future has not been resolved, it is dropped.
+    #[cfg(feature = "async")]
+    pub fn future<'scope>(
+        &'scope self,
+        future: futures_util::future::LocalBoxFuture<'env, ()>,
+    ) -> impl futures_util::future::Future<Output = ()> + 'static {
+        let future = unsafe { transmute_future_lifetime(future) };
+        let future = Rc::new(std::cell::RefCell::new(Some(future)));
+        self.callbacks
+            .borrow_mut()
+            .push(Rc::new(Deregister::new(Box::new({
+                let future = future.clone();
+                move || {
+                    future.as_ref().borrow_mut().take();
+                }
+            }))));
+
+        use futures_util::{
+            future::Future,
+            task::{Context, Poll},
+        };
+        use std::{cell::RefCell, pin::Pin};
+        struct StaticFuture(Rc<RefCell<Option<futures_util::future::LocalBoxFuture<'static, ()>>>>);
+
+        impl Future for StaticFuture {
+            type Output = ();
+
+            fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+                if let Some(future) = self.0.borrow_mut().as_mut() {
+                    Future::poll(future.as_mut(), cx)
+                } else {
+                    Poll::Ready(())
+                }
+            }
+        }
+        StaticFuture(future)
     }
 }
 
