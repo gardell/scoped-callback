@@ -163,7 +163,7 @@ impl<'env> Scope<'env> {
     }
 
     /// Wrap a scoped `Future` into one with a `'static` lifetime.
-    /// As the scope leaves, if the future has not been resolved, it is dropped.
+    /// `Future::poll` will `panic!` if called after the scope has been dropped.
     #[cfg(feature = "async")]
     pub fn future<'scope>(
         &'scope self,
@@ -195,7 +195,7 @@ impl<'env> Scope<'env> {
                 if let Some(future) = self.0.borrow_mut().as_mut() {
                     Future::poll(future.as_mut(), cx)
                 } else {
-                    Poll::Ready(())
+                    panic!("Future used after scope is unsafe")
                 }
             }
         }
