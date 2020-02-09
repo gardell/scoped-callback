@@ -169,8 +169,10 @@ impl<'env> Scope<'env> {
         &'scope self,
         future: futures_util::future::LocalBoxFuture<'env, ()>,
     ) -> impl futures_util::future::Future<Output = ()> + 'static {
+        use std::{cell::RefCell, pin::Pin};
+
         let future = unsafe { transmute_future_lifetime(future) };
-        let future = Rc::new(std::cell::RefCell::new(Some(future)));
+        let future = Rc::new(RefCell::new(Some(future)));
         self.callbacks
             .borrow_mut()
             .push(Rc::new(Deregister::new(Box::new({
@@ -181,11 +183,10 @@ impl<'env> Scope<'env> {
             }))));
 
         use futures_util::{
-            future::Future,
+            future::{Future, LocalBoxFuture},
             task::{Context, Poll},
         };
-        use std::{cell::RefCell, pin::Pin};
-        struct StaticFuture(Rc<RefCell<Option<futures_util::future::LocalBoxFuture<'static, ()>>>>);
+        struct StaticFuture(Rc<RefCell<Option<LocalBoxFuture<'static, ()>>>>);
 
         impl Future for StaticFuture {
             type Output = ();
