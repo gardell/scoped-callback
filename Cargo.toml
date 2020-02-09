@@ -11,7 +11,7 @@ name = "scoped-callback"
 publish = [ "crates-io" ]
 readme = "README.md"
 repository = "https://github.com/gardell/scoped-callback"
-version = "0.1.1"
+version = "0.2.0"
 
 [dependencies]
 futures-util = {version = "0.3", optional = true }
